@@ -2,6 +2,9 @@ import numpy as np
 import os
 import random
 import scipy.io.wavfile as wav
+import cupy as cp
+import chainer.cuda
+
 
 def load(path, time=-1):
     bps, data = wav.read(path)
@@ -30,9 +33,9 @@ def find_wav(path):
 
 def image_single_split_pad(src, side, pos, power, scale, window):
     wave_len = side*2 - 2
-    spl = np.array([src[p:p+wave_len]*window for p in range(pos, pos+side*side, side)])
-    spl = np.fft.fft(spl, axis=1)
-    spl = spl[:,:side]
+    spl = cp.array([src[p:p+wave_len]*window for p in range(pos, pos+side*side, side)])
+    spl = cp.fft.fft(spl, axis=1)
+    spl = chainer.cuda.to_cpu(spl[:,:side])
     spl = np.abs([spl], dtype=np.float32)
     spl = _pow_scale(spl, power)
     spl *= scale
